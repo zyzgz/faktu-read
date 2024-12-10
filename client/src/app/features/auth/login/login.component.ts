@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 
@@ -22,10 +22,10 @@ import { InputTextModule } from 'primeng/inputtext';
     RouterLink,
   ],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss',
 })
 export class LoginComponent {
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly router = inject(Router);
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -40,10 +40,9 @@ export class LoginComponent {
     }
 
     this.isLoading.set(true);
-    console.log(this.loginForm.value);
-
     setTimeout(() => {
       this.isLoading.set(false);
+      this.router.navigate(['/dashboard']);
     }, 3000);
   }
 }

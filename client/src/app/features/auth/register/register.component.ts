@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { passwordMatchValidator } from './password-match.validator';
@@ -22,10 +22,10 @@ import { passwordMatchValidator } from './password-match.validator';
     RouterLink,
   ],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.scss',
 })
 export class RegisterComponent {
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly router = inject(Router);
 
   registerForm = this.fb.group(
     {
@@ -44,10 +44,9 @@ export class RegisterComponent {
     }
 
     this.isLoading.set(true);
-    console.log(this.registerForm.value);
-
     setTimeout(() => {
       this.isLoading.set(false);
+      this.router.navigate(['/dashboard']);
     }, 3000);
   }
 }
