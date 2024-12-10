@@ -102,7 +102,6 @@ def convert_date(date_string):
 
 
 def extract_amount(amount_string):
-    # Usuwamy wszystko, co nie jest liczbą lub kropką
     amount_string = re.sub(r'[^\d.,-]', '', amount_string)
 
     # Zamiana na Decimal, aby zachować precyzyjność
@@ -122,10 +121,8 @@ def upload_invoices(request):
 
     for file in files:
         try:
-            # Utwórz rekord dla przesłanego pliku
             uploaded_file = UploadedFile.objects.create(file=file)
 
-            # Przetwarzanie pliku za pomocą Azure Document Intelligence
             invoices = get_azure_api_response(uploaded_file.file.path)
 
             for invoice in invoices.documents:
@@ -145,7 +142,6 @@ def upload_invoices(request):
                     file=uploaded_file,
                 )
 
-                # Przesyłanie pliku do Azure Blob Storage
                 blob_service_client = BlobServiceClient.from_connection_string(
                     settings.AZURE_STORAGE_CONNECTION_STRING)
                 blob_client = blob_service_client.get_blob_client(
@@ -153,7 +149,6 @@ def upload_invoices(request):
                 with open(uploaded_file.file.path, "rb") as data:
                     blob_client.upload_blob(data)
 
-            # Oznacz plik jako przetworzony
             uploaded_file.processed = True
             uploaded_file.save()
 
@@ -183,16 +178,13 @@ def generate_excel_report(request):
     if not invoices.exists():
         return JsonResponse({'error': 'No invoices found for this NIP'}, status=404)
 
-    # Tworzenie pliku Excel
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = f"Report for NIP {nip}"
 
-    # Nagłówki
     headers = ["Invoice Number", "Issue Date", "Due Date", "Total Amount"]
     sheet.append(headers)
 
-    # Dane
     for invoice in invoices:
         sheet.append([
             invoice.invoice_number,
@@ -201,12 +193,10 @@ def generate_excel_report(request):
             float(invoice.total_amount),
         ])
 
-    # Podsumowanie
     sheet.append([])
     sheet.append(["Total Invoices", invoices.count()])
     sheet.append(["Total Amount", sum(invoice.total_amount for invoice in invoices)])
 
-    # Przygotowanie odpowiedzi HTTP z plikiem Excel
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
