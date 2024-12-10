@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -22,6 +23,7 @@ import { PasswordModule } from 'primeng/password';
     PasswordModule,
     ButtonModule,
     MessageModule,
+    RouterLink,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
@@ -34,18 +36,18 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
   isLoading = signal(false);
-  errorMessage: string | null = null;
 
   login(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
-      this.errorMessage = 'Wprowadź poprawne dane logowania.';
       return;
     }
 
     this.isLoading.set(true);
-    this.errorMessage = null;
-
     console.log(this.loginForm.value);
+
+    setTimeout(() => {
+      this.isLoading.set(false);
+    }, 3000);
   }
 }
