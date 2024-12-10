@@ -1,1 +1,84 @@
-<p>register works!</p>
+<h1 class="text-2xl font-bold mb-6 text-center">Zarejestruj się</h1>
+<form [formGroup]="registerForm" (ngSubmit)="register()" class="space-y-4 w-full max-w-md">
+  <div class="space-y-2">
+    <label for="email" class="block font-semibold">E-mail</label>
+    <input
+      id="email"
+      type="email"
+      pInputText
+      formControlName="email"
+      placeholder="example@mail.com"
+      class="w-full"
+      [ngClass]="{
+        'ng-invalid ng-dirty':
+          registerForm.controls.email.invalid && registerForm.controls.email.touched
+      }"
+    />
+    @if (registerForm.controls.email.hasError('required') && registerForm.controls.email.touched) {
+    <small class="block text-red-500">E-mail jest wymagany.</small>
+    } @if (registerForm.controls.email.hasError('email') && registerForm.controls.email.touched) {
+    <small class="block text-red-500">Nieprawidłowy format e-maila.</small>
+    }
+  </div>
+
+  <div class="space-y-2">
+    <label for="password" class="block font-semibold">Hasło</label>
+    <input
+      id="password"
+      type="password"
+      pInputText
+      formControlName="password"
+      class="w-full"
+      [ngClass]="{
+        'ng-invalid ng-dirty':
+          registerForm.controls.password.invalid && registerForm.controls.password.touched
+      }"
+    />
+    @if (registerForm.controls.password.hasError('required') &&
+    registerForm.controls.password.touched) {
+    <small class="block text-red-500">Hasło jest wymagane.</small>
+    } @if (registerForm.controls.password.hasError('minlength') &&
+    registerForm.controls.password.touched) {
+    <small class="block text-red-500">Hasło musi mieć co najmniej 6 znaków.</small>
+    }
+  </div>
+
+  <div class="space-y-2">
+    <label for="confirmPassword" class="block font-semibold">Potwierdź hasło</label>
+    <input
+      id="confirmPassword"
+      type="password"
+      pInputText
+      formControlName="confirmPassword"
+      class="w-full"
+      [ngClass]="{
+        'ng-invalid ng-dirty':
+          registerForm.controls.confirmPassword.invalid &&
+          registerForm.controls.confirmPassword.touched
+      }"
+    />
+    @if (registerForm.controls.confirmPassword.hasError('required') &&
+    registerForm.controls.confirmPassword.touched) {
+    <small class="block text-red-500">Potwierdzenie hasła jest wymagane.</small>
+    } @if (registerForm.controls.confirmPassword.hasError('minlength') &&
+    registerForm.controls.confirmPassword.touched) {
+    <small class="block text-red-500">Hasło musi mieć co najmniej 6 znaków.</small>
+    } @if (registerForm.hasError('passwordMismatch') &&
+    registerForm.controls.confirmPassword.touched) {
+    <small class="block text-red-500">Hasła muszą się zgadzać.</small>
+    }
+  </div>
+
+  <button
+    pButton
+    type="submit"
+    label="Zarejestruj się"
+    [loading]="isLoading()"
+    class="w-full"
+  ></button>
+</form>
+
+<p class="mt-4 text-center">
+  Masz już konto?
+  <a routerLink="/auth/login" class="text-blue-500 hover:underline cursor-pointer">Zaloguj się</a>
+</p>

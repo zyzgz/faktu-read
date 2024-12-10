@@ -9,8 +9,6 @@ import {
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { MessageModule } from 'primeng/message';
-import { PasswordModule } from 'primeng/password';
 
 @Component({
   selector: 'app-login',
@@ -20,9 +18,7 @@ import { PasswordModule } from 'primeng/password';
     FormsModule,
     ReactiveFormsModule,
     InputTextModule,
-    PasswordModule,
     ButtonModule,
-    MessageModule,
     RouterLink,
   ],
   templateUrl: './login.component.html',
