@@ -153,3 +153,6 @@ REST_FRAMEWORK = {
 
 AZURE_AI_ENDPOINT = "https://docai-app.cognitiveservices.azure.com/"
 AZURE_AI_KEY = env("AZURE_AI_KEY", None)
+
+AZURE_STORAGE_CONNECTION_STRING = env("AZURE_STORAGE_CONNECTION_STRING", None)
+CONTAINER_NAME = 'invoiceblobs'
