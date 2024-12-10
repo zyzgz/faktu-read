@@ -78,6 +78,10 @@
   ></button>
 </form>
 
+@if (errorMessage) {
+<p-message styleClass="mt-4" severity="error" size="small">{{ errorMessage }}</p-message>
+}
+
 <p class="mt-4 text-center">
   Masz już konto?
   <a routerLink="/auth/login" class="text-blue-500 hover:underline cursor-pointer">Zaloguj się</a>

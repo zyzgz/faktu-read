@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   FormsModule,
   NonNullableFormBuilder,
@@ -9,6 +9,8 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { AuthService } from '../../../core/services/auth.service';
+import { Message } from 'primeng/message';
 
 @Component({
   selector: 'app-login',
@@ -20,10 +22,13 @@ import { InputTextModule } from 'primeng/inputtext';
     InputTextModule,
     ButtonModule,
     RouterLink,
+    Message,
   ],
   templateUrl: './login.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
+  private readonly auth = inject(AuthService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly router = inject(Router);
 
@@ -32,17 +37,27 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
   isLoading = signal(false);
+  errorMessage: string | null = null;
 
   login(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
+      this.errorMessage = null;
       return;
     }
 
     this.isLoading.set(true);
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.router.navigate(['/dashboard']);
-    }, 3000);
+    this.errorMessage = null;
+    const { email, password } = this.loginForm.getRawValue();
+    this.auth.login(email, password).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.errorMessage = 'Błędny email lub hasło.';
+        this.loginForm.controls.password.reset();
+      },
+    });
   }
 }

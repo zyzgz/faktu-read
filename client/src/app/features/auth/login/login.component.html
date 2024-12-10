@@ -44,6 +44,10 @@
   <button pButton type="submit" label="Zaloguj się" [loading]="isLoading()" class="w-full"></button>
 </form>
 
+@if (errorMessage) {
+<p-message styleClass="mt-4" severity="error" size="small">{{ errorMessage }}</p-message>
+}
+
 <p class="mt-4 text-center">
   Nie masz konta?
   <a routerLink="/auth/register" class="text-blue-500 hover:underline cursor-pointer"
