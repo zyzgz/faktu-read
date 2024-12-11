@@ -1,0 +1,56 @@
+<h1 class="text-2xl font-bold mb-6 text-center">Zaloguj się</h1>
+<form [formGroup]="loginForm" (ngSubmit)="login()" class="space-y-4 w-full max-w-md">
+  <div class="space-y-2">
+    <label for="email" class="block font-semibold">E-mail</label>
+    <input
+      id="email"
+      type="email"
+      pInputText
+      formControlName="email"
+      placeholder="example@mail.com"
+      class="w-full"
+      [ngClass]="{
+        'ng-invalid ng-dirty': loginForm.controls.email.invalid && loginForm.controls.email.touched
+      }"
+    />
+    @if (loginForm.controls.email.hasError('required') && loginForm.controls.email.touched) {
+    <small class="block text-red-500">E-mail jest wymagany.</small>
+    } @if (loginForm.controls.email.hasError('email') && loginForm.controls.email.touched) {
+    <small class="block text-red-500">Nieprawidłowy format e-maila.</small>
+    }
+  </div>
+
+  <div class="space-y-2">
+    <label for="password" class="block font-semibold">Hasło</label>
+    <input
+      id="password"
+      type="password"
+      pInputText
+      formControlName="password"
+      class="w-full"
+      [ngClass]="{
+        'ng-invalid ng-dirty':
+          loginForm.controls.password.invalid && loginForm.controls.password.touched
+      }"
+    />
+    @if (loginForm.controls.password.hasError('required') && loginForm.controls.password.touched) {
+    <small class="block text-red-500">Hasło jest wymagane.</small>
+    } @if (loginForm.controls.password.hasError('minlength') && loginForm.controls.password.touched)
+    {
+    <small class="block text-red-500">Hasło musi mieć co najmniej 6 znaków.</small>
+    }
+  </div>
+
+  <button pButton type="submit" label="Zaloguj się" [loading]="isLoading()" class="w-full"></button>
+</form>
+
+@if (errorMessage) {
+<p-message styleClass="mt-4" severity="error" size="small">{{ errorMessage }}</p-message>
+}
+
+<p class="mt-4 text-center">
+  Nie masz konta?
+  <a routerLink="/auth/register" class="text-blue-500 hover:underline cursor-pointer"
+    >Zarejestruj się</a
+  >
+</p>
