@@ -3,6 +3,7 @@ import traceback
 from datetime import datetime
 from decimal import Decimal
 
+from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from openpyxl.workbook import Workbook
 from rest_framework import status
@@ -128,16 +129,27 @@ def upload_invoices(request):
             for invoice in invoices.documents:
                 invoice_data = parse_invoice_content(invoice)
 
-                issue_date = convert_date(invoice_data['invoice_date'])
+                invoice_date = convert_date(invoice_data['invoice_date'])
                 due_date = convert_date(invoice_data['due_date'])
                 total_amount = extract_amount(invoice_data['total_amount'])
 
                 invoice_obj = Invoice.objects.create(
                     invoice_number=invoice_data['invoice_id'],
-                    client_nip=invoice_data['customer_tax_id'],
-                    issue_date=issue_date,
+                    invoice_date=invoice_date,
                     due_date=due_date,
                     total_amount=total_amount,
+                    vendor_name=invoice_data['vendor_name'],
+                    vendor_address=invoice_data['vendor_address'],
+                    vendor_tax_id=invoice_data['vendor_tax_id'],
+                    vendor_address_recipient=invoice_data['vendor_address_recipient'],
+                    customer_name=invoice_data['customer_name'],
+                    customer_id=invoice_data['customer_id'],
+                    customer_tax_id=invoice_data['customer_tax_id'],
+                    customer_address=invoice_data['customer_address'],
+                    billing_address=invoice_data.get('billing_address'),
+                    shipping_address=invoice_data.get('shipping_address'),
+                    payment_term=invoice_data.get('payment_term'),
+                    items=invoice_data.get('items'),
                     created_by=request.user,
                     file=uploaded_file,
                 )
@@ -174,7 +186,7 @@ def generate_excel_report(request):
     if not nip:
         return JsonResponse({'error': 'NIP parameter is required'}, status=400)
 
-    invoices = Invoice.objects.filter(client_nip=nip)
+    invoices = Invoice.objects.filter(customer_tax_id=nip)
     if not invoices.exists():
         return JsonResponse({'error': 'No invoices found for this NIP'}, status=404)
 
@@ -182,15 +194,22 @@ def generate_excel_report(request):
     sheet = workbook.active
     sheet.title = f"Report for NIP {nip}"
 
-    headers = ["Invoice Number", "Issue Date", "Due Date", "Total Amount"]
+    headers = [
+        "Invoice Number", "Invoice Date", "Due Date", "Total Amount",
+        "Vendor Name", "Vendor Address", "Customer Name", "Customer Address"
+    ]
     sheet.append(headers)
 
     for invoice in invoices:
         sheet.append([
             invoice.invoice_number,
-            invoice.issue_date,
+            invoice.invoice_date,
             invoice.due_date,
             float(invoice.total_amount),
+            invoice.vendor_name,
+            invoice.vendor_address,
+            invoice.customer_name,
+            invoice.customer_address,
         ])
 
     sheet.append([])
@@ -206,5 +225,70 @@ def generate_excel_report(request):
     return response
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_invoices(request):
+    """
+    Endpoint zwracający dane faktur w formacie JSON.
+    Obsługuje filtry GET: invoice_number, vendor_tax_id, customer_tax_id, invoice_date_from, invoice_date_to.
+    """
+    # Pobieranie parametrów filtrów
+    invoice_number = request.GET.get('invoice_number')
+    vendor_tax_id = request.GET.get('vendor_tax_id')
+    customer_tax_id = request.GET.get('customer_tax_id')
+    invoice_date_from = request.GET.get('invoice_date_from')
+    invoice_date_to = request.GET.get('invoice_date_to')
 
+    # Tworzenie zapytania do bazy z dynamicznymi filtrami
+    filters = Q()
 
+    if invoice_number:
+        filters &= Q(invoice_number__icontains=invoice_number)
+    if vendor_tax_id:
+        filters &= Q(vendor_tax_id__icontains=vendor_tax_id)
+    if customer_tax_id:
+        filters &= Q(customer_tax_id__icontains=customer_tax_id)
+    if invoice_date_from:
+        try:
+            date_from = datetime.strptime(invoice_date_from, '%Y-%m-%d').date()
+            filters &= Q(invoice_date__gte=date_from)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format for invoice_date_from. Use YYYY-MM-DD.'}, status=400)
+    if invoice_date_to:
+        try:
+            date_to = datetime.strptime(invoice_date_to, '%Y-%m-%d').date()
+            filters &= Q(invoice_date__lte=date_to)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format for invoice_date_to. Use YYYY-MM-DD.'}, status=400)
+
+    # Pobieranie danych z bazy
+    invoices = Invoice.objects.filter(filters)
+
+    # Przygotowanie danych do formatu JSON
+    data = [
+        {
+            "invoice_number": invoice.invoice_number,
+            "invoice_date": invoice.invoice_date,
+            "due_date": invoice.due_date,
+            "total_amount": invoice.total_amount,
+            "amount_due": invoice.amount_due,
+            "vendor_name": invoice.vendor_name,
+            "vendor_address": invoice.vendor_address,
+            "vendor_tax_id": invoice.vendor_tax_id,
+            "vendor_address_recipient": invoice.vendor_address_recipient,
+            "customer_name": invoice.customer_name,
+            "customer_id": invoice.customer_id,
+            "customer_tax_id": invoice.customer_tax_id,
+            "customer_address": invoice.customer_address,
+            "billing_address": invoice.billing_address,
+            "shipping_address": invoice.shipping_address,
+            "payment_term": invoice.payment_term,
+            "items": invoice.items,
+            "created_by": invoice.created_by.username,
+            "created_at": invoice.created_at,
+            "file": invoice.file.file.name if invoice.file else None,
+        }
+        for invoice in invoices
+    ]
+
+    return JsonResponse({"invoices": data}, status=200, safe=False)
