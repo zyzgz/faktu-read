@@ -11,7 +11,7 @@ export class AuthService {
   private readonly tokenKey = 'auth_token';
 
   login(username: string, password: string): Observable<{ token: string }> {
-    return this.api.post<{ token: string }>('auth/login', { username, password }).pipe(
+    return this.api.post<{ token: string }>('login', { username, password }).pipe(
       tap((response) => this.setToken(response.token)),
       catchError((error) => {
         console.error('Login error:', error);
@@ -21,7 +21,7 @@ export class AuthService {
   }
 
   register(username: string, password: string): Observable<{ username: string }> {
-    return this.api.post<{ username: string }>('auth/register', { username, password }).pipe(
+    return this.api.post<{ username: string }>('register', { username, password }).pipe(
       catchError((error) => {
         console.error('Register error:', error);
         throw error;
