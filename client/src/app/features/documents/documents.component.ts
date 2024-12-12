@@ -16,21 +16,21 @@ import { Toast } from 'primeng/toast';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentsComponent {
-  private readonly documentsService = inject(DocumentsService);
-  private readonly messageService = inject(MessageService);
+  private readonly documents = inject(DocumentsService);
+  private readonly message = inject(MessageService);
 
   uploadedInvoices: UploadResponse[] = [];
 
   uploadInvoices(event: FileUploadHandlerEvent): void {
     const files: File[] = Array.from(event.files);
-    this.documentsService.uploadInvoices(files).subscribe({
+    this.documents.uploadInvoices(files).subscribe({
       next: (responses: UploadResponse[]) => {
         this.uploadedInvoices = responses;
         const successCount = responses.filter((response) => response.message).length;
         const errorCount = responses.filter((response) => response.error).length;
 
         if (successCount > 0) {
-          this.messageService.add({
+          this.message.add({
             severity: 'success',
             summary: 'Sukces',
             detail: `${successCount} faktur przesłano pomyślnie.`,
@@ -38,7 +38,7 @@ export class DocumentsComponent {
         }
 
         if (errorCount > 0) {
-          this.messageService.add({
+          this.message.add({
             severity: 'error',
             summary: 'Błąd',
             detail: `${errorCount} faktur nie udało się przesłać.`,
@@ -46,7 +46,7 @@ export class DocumentsComponent {
         }
       },
       error: () => {
-        this.messageService.add({
+        this.message.add({
           severity: 'error',
           summary: 'Wystąpił błąd',
           detail: 'Przesyłanie nie powiodło się, spróbuj ponownie.',
