@@ -1,3 +1,55 @@
-<div class="min-h-screen bg-gray-100">
-  <p>documents works!</p>
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-semibold text-gray-800">Faktury</h1>
+  </div>
+
+  <div class="space-y-2">
+    <p-fileupload
+      [customUpload]="true"
+      (uploadHandler)="uploadInvoices($event)"
+      [multiple]="true"
+      maxFileSize="1000000"
+      mode="advanced"
+      chooseLabel="Dodaj faktury"
+      uploadLabel="Wyślij"
+      cancelLabel="Anuluj"
+      styleClass="rounded-lg border text-card-foreground bg-white shadow-sm p-1"
+    >
+      <ng-template #empty>
+        <div>Przeciągnij i upuść pliki tutaj, aby je przesłać.</div>
+      </ng-template>
+    </p-fileupload>
+    <p-toast />
+  </div>
+
+  @if(uploadedInvoices.length > 0){
+  <div class="rounded-lg border text-card-foreground bg-white shadow-sm">
+    <div class="flex flex-col space-y-1.5 p-6">
+      <h3 class="text-2xl font-semibold leading-none tracking-tight">Przesłane faktury</h3>
+    </div>
+    <div class="p-6 pt-0">
+      <p-table [value]="uploadedInvoices">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Nazwa pliku</th>
+            <th>Wiadomość</th>
+            <th>Błąd</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-invoice>
+          <tr>
+            <td>{{ invoice.file_name }}</td>
+            <td>{{ invoice.message }}</td>
+            <td>{{ invoice.error }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3">Brak przesłanych faktur.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+  }
 </div>
