@@ -20,8 +20,9 @@ export class DashboardComponent {
       label: 'Wyloguj',
       icon: 'pi pi-sign-out',
       command: () => {
-        this.auth.logout();
-        this.router.navigate(['/login']);
+        this.auth.logout().subscribe({
+          next: () => this.router.navigate(['/login']),
+        });
       },
     },
   ];

@@ -10,27 +10,39 @@ export class AuthService {
 
   private readonly tokenKey = 'auth_token';
 
-  login(username: string, password: string): Observable<{ token: string }> {
-    return this.api.post<{ token: string }>('login', { username, password }).pipe(
-      tap((response) => this.setToken(response.token)),
+  login(username: string, password: string): Observable<{ token: string } | { error: string }> {
+    return this.api
+      .post<{ token: string } | { error: string }>('login', { username, password })
+      .pipe(
+        tap((response) => {
+          if ('token' in response) this.setToken(response.token);
+        }),
+        catchError((error) => {
+          console.error('Login error:', error);
+          throw error;
+        }),
+      );
+  }
+
+  register(username: string, password: string): Observable<{ username: string } | { errors: any }> {
+    return this.api
+      .post<{ username: string } | { errors: any }>('register', { username, password })
+      .pipe(
+        catchError((error) => {
+          console.error('Register error:', error);
+          throw error;
+        }),
+      );
+  }
+
+  logout(): Observable<{ message: string } | { error: string }> {
+    return this.api.post<{ message: string }>('logout', {}).pipe(
+      tap(() => localStorage.removeItem(this.tokenKey)),
       catchError((error) => {
-        console.error('Login error:', error);
+        console.error('Logout error:', error);
         throw error;
       }),
     );
-  }
-
-  register(username: string, password: string): Observable<{ username: string }> {
-    return this.api.post<{ username: string }>('register', { username, password }).pipe(
-      catchError((error) => {
-        console.error('Register error:', error);
-        throw error;
-      }),
-    );
-  }
-
-  logout(): void {
-    localStorage.removeItem(this.tokenKey);
   }
 
   isAuthenticated(): boolean {
