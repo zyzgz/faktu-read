@@ -1,1 +1,64 @@
-<p>home works!</p>
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-semibold text-gray-800">Witamy z powrotem, John</h1>
+    <a routerLink="/dashboard/documents" class="p-button font-medium">Dodaj nową fakturę</a>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2">
+    <div class="rounded-lg border text-card-foreground bg-white shadow-sm">
+      <div class="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
+        <div class="tracking-tight font-medium text-gray-600">Łączna liczba faktur</div>
+        <i class="pi pi-file text-blue-500 h-4 w-4"></i>
+      </div>
+      <div class="p-6 pt-0">
+        <div class="text-2xl font-bold text-gray-800">128</div>
+      </div>
+    </div>
+    <div class="rounded-lg border text-card-foreground bg-white shadow-sm">
+      <div class="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
+        <div class="tracking-tight font-medium text-gray-600">Wygenerowane raporty</div>
+        <i class="pi pi-chart-bar text-green-500 h-4 w-4"></i>
+      </div>
+      <div class="p-6 pt-0">
+        <div class="text-2xl font-bold text-gray-800">12</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-lg border text-card-foreground bg-white shadow-sm">
+    <div class="flex flex-col space-y-1.5 p-6">
+      <h3 class="text-2xl font-semibold leading-none tracking-tight">Lista faktur</h3>
+    </div>
+    <div class="p-6 pt-0">
+      <p-table [value]="[]">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Numer faktury</th>
+            <th>NIP klienta</th>
+            <th>Data wystawienia</th>
+            <th>Data płatności</th>
+            <th>Kwota</th>
+            <th>Data utworzenia</th>
+            <th>Utworzone przez</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-document>
+          <tr>
+            <td>{{ document.invoice_number }}</td>
+            <td>{{ document.client_nip }}</td>
+            <td>{{ document.issue_date }}</td>
+            <td>{{ document.due_date }}</td>
+            <td>{{ document.total_amount | currency }}</td>
+            <td>{{ document.created_at }}</td>
+            <td>{{ document.created_by }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7">Nie znaleziono faktur.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
