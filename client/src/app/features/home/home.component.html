@@ -11,7 +11,7 @@
         <i class="pi pi-file text-blue-500 h-4 w-4"></i>
       </div>
       <div class="p-6 pt-0">
-        <div class="text-2xl font-bold text-gray-800">128</div>
+        <div class="text-2xl font-bold text-gray-800">{{ invoicesCount$ | async }}</div>
       </div>
     </div>
     <div class="rounded-lg border text-card-foreground bg-white shadow-sm">
@@ -30,7 +30,22 @@
       <h3 class="text-2xl font-semibold leading-none tracking-tight">Lista faktur</h3>
     </div>
     <div class="p-6 pt-0">
-      <p-table [value]="[]">
+      @if (invoicesError$ | async; as error) {
+      <div
+        class="bg-red-50 border border-red-200 px-4 py-3 rounded relative mb-4 flex flex items-center justify-between gap-2"
+      >
+        <p class="text-red-700 font-semibold">{{ error }}</p>
+        <p-button
+          label="Spróbuj ponownie"
+          icon="pi pi-refresh"
+          (click)="refresh()"
+          size="small"
+          severity="danger"
+          styleClass="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+        ></p-button>
+      </div>
+      } @if (invoices$ | async; as invoices) {
+      <p-table [value]="invoices">
         <ng-template pTemplate="header">
           <tr>
             <th>Numer faktury</th>
@@ -42,15 +57,15 @@
             <th>Utworzone przez</th>
           </tr>
         </ng-template>
-        <ng-template pTemplate="body" let-document>
+        <ng-template pTemplate="body" let-invoice>
           <tr>
-            <td>{{ document.invoice_number }}</td>
-            <td>{{ document.client_nip }}</td>
-            <td>{{ document.issue_date }}</td>
-            <td>{{ document.due_date }}</td>
-            <td>{{ document.total_amount | currency }}</td>
-            <td>{{ document.created_at }}</td>
-            <td>{{ document.created_by }}</td>
+            <td>{{ invoice.invoice_number }}</td>
+            <td>{{ invoice.customer_tax_id }}</td>
+            <td>{{ invoice.invoice_date }}</td>
+            <td>{{ invoice.due_date }}</td>
+            <td>{{ invoice.total_amount | currency }}</td>
+            <td>{{ invoice.created_at }}</td>
+            <td>{{ invoice.created_by }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
@@ -59,6 +74,7 @@
           </tr>
         </ng-template>
       </p-table>
+      }
     </div>
   </div>
 </div>
