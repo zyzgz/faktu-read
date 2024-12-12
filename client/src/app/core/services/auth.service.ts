@@ -49,12 +49,12 @@ export class AuthService {
     return !!this.getToken();
   }
 
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
   private setToken(token: string): void {
     localStorage.removeItem(this.tokenKey);
     localStorage.setItem(this.tokenKey, token);
-  }
-
-  private getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
   }
 }
