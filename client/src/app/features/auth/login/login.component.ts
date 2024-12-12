@@ -33,7 +33,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
 
   loginForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    username: ['', Validators.required],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
   isLoading = signal(false);
@@ -48,14 +48,12 @@ export class LoginComponent {
 
     this.isLoading.set(true);
     this.errorMessage = null;
-    const { email, password } = this.loginForm.getRawValue();
-    this.auth.login(email, password).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
-      },
+    const { username, password } = this.loginForm.getRawValue();
+    this.auth.login(username, password).subscribe({
+      next: () => this.router.navigate(['/dashboard']),
       error: () => {
         this.isLoading.set(false);
-        this.errorMessage = 'Błędny email lub hasło.';
+        this.errorMessage = 'Błędna nazwa lub hasło.';
         this.loginForm.controls.password.reset();
       },
     });

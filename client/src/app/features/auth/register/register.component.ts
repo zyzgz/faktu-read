@@ -34,7 +34,7 @@ export class RegisterComponent {
 
   registerForm = this.fb.group(
     {
-      email: ['', [Validators.required, Validators.email]],
+      username: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required, Validators.minLength(6)]],
     },
@@ -52,11 +52,9 @@ export class RegisterComponent {
 
     this.isLoading.set(true);
     this.errorMessage = null;
-    const { email, password } = this.registerForm.getRawValue();
-    this.auth.register(email, password).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
-      },
+    const { username, password } = this.registerForm.getRawValue();
+    this.auth.register(username, password).subscribe({
+      next: () => this.router.navigate(['/login']),
       error: () => {
         this.isLoading.set(false);
         this.errorMessage = 'Nie udało się zarejestrować.';
