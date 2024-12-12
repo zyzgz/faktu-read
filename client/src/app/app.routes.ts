@@ -22,6 +22,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
       },
+      {
+        path: '**',
+        redirectTo: 'login',
+      },
     ],
   },
   {
@@ -48,6 +52,10 @@ export const routes: Routes = [
         path: 'reports',
         loadComponent: () =>
           import('./features/reports/reports.component').then((m) => m.ReportsComponent),
+      },
+      {
+        path: '**',
+        redirectTo: 'home',
       },
     ],
   },
