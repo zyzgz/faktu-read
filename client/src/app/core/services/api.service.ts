@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class ApiService {
   private readonly http = inject(HttpClient);
 
-  private readonly baseUrl = '';
+  private readonly baseUrl = 'http://127.0.0.1:8000/api';
 
   private getHttpOptions() {
     return {

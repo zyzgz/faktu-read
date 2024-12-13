@@ -12,7 +12,7 @@ export class AuthService {
 
   login(username: string, password: string): Observable<{ token: string } | { error: string }> {
     return this.api
-      .post<{ token: string } | { error: string }>('login', { username, password })
+      .post<{ token: string } | { error: string }>('login/', { username, password })
       .pipe(
         tap((response) => {
           if ('token' in response) this.setToken(response.token);
@@ -26,7 +26,7 @@ export class AuthService {
 
   register(username: string, password: string): Observable<{ username: string } | { errors: any }> {
     return this.api
-      .post<{ username: string } | { errors: any }>('register', { username, password })
+      .post<{ username: string } | { errors: any }>('register/', { username, password })
       .pipe(
         catchError((error) => {
           console.error('Register error:', error);
@@ -36,7 +36,7 @@ export class AuthService {
   }
 
   logout(): Observable<{ message: string } | { error: string }> {
-    return this.api.post<{ message: string }>('logout', {}).pipe(
+    return this.api.post<{ message: string }>('logout/', {}).pipe(
       tap(() => localStorage.removeItem(this.tokenKey)),
       catchError((error) => {
         console.error('Logout error:', error);
