@@ -4,7 +4,15 @@
   </div>
 
   <div class="space-y-2">
+    <p-blockUI [blocked]="isLoading()" [target]="fileUpload">
+      <ng-template #content>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <p-progressSpinner></p-progressSpinner>
+        </div>
+      </ng-template>
+    </p-blockUI>
     <p-fileupload
+      #fileUpload
       [customUpload]="true"
       (uploadHandler)="uploadInvoices($event)"
       [multiple]="true"
