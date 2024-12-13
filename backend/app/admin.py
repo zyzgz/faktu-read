@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CustomUser, Invoice, UploadedFile
+from .models import CustomUser, Invoice, UploadedFile, Report
 
 
 @admin.register(CustomUser)
@@ -30,3 +30,11 @@ class UploadedFileAdmin(admin.ModelAdmin):
     list_display = ('file', 'uploaded_at', 'processed')
     search_fields = ('file',)
     list_filter = ('uploaded_at', 'processed')
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('name', 'report_type', 'generated_at', 'generated_by', 'file')
+    search_fields = ('name',)
+    list_filter = ('generated_at', 'generated_by')
+    ordering = ('-generated_at',)
