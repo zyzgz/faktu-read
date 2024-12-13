@@ -49,3 +49,14 @@ class UploadedFile(models.Model):
 
     def __str__(self):
         return f"File {self.file.name} - Processed: {self.processed}"
+
+
+class Report(models.Model):
+    name = models.CharField(max_length=255)
+    report_type = models.CharField(max_length=100)
+    generated_at = models.DateTimeField(auto_now_add=True)
+    generated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='reports/')
+
+    def __str__(self):
+        return f"Report: {self.name} ({self.report_type})"

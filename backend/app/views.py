@@ -1,10 +1,12 @@
+import os
 import re
 import traceback
 from datetime import datetime
 from decimal import Decimal
 
+from django.core.files.base import ContentFile
 from django.db.models import Q
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from openpyxl.workbook import Workbook
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser
@@ -15,7 +17,7 @@ from rest_framework.authtoken.models import Token
 
 from .azure_api import get_azure_api_response
 from .docai_parser import parse_invoice_content
-from .models import CustomUser, UploadedFile, Invoice
+from .models import CustomUser, UploadedFile, Invoice, Report
 from .serializers import UserSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate
@@ -51,7 +53,9 @@ def user_login(request):
 
         if user:
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
+            return Response({'token': token.key,
+                             'username': username,
+                             }, status=status.HTTP_200_OK)
 
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -117,8 +121,8 @@ def upload_invoices(request):
     if 'files' not in request.FILES:
         return JsonResponse({'error': 'No files provided'}, status=400)
 
-    files = request.FILES.getlist('files')  # Pobierz listę plików
-    responses = []  # Lista na odpowiedzi dla każdego pliku
+    files = request.FILES.getlist('files')
+    responses = []
 
     for file in files:
         try:
@@ -126,6 +130,7 @@ def upload_invoices(request):
 
             invoices = get_azure_api_response(uploaded_file.file.path)
 
+            invoice_objects = []
             for invoice in invoices.documents:
                 invoice_data = parse_invoice_content(invoice)
 
@@ -154,6 +159,8 @@ def upload_invoices(request):
                     file=uploaded_file,
                 )
 
+                invoice_objects.append(invoice_obj)
+
                 blob_service_client = BlobServiceClient.from_connection_string(
                     settings.AZURE_STORAGE_CONNECTION_STRING)
                 blob_client = blob_service_client.get_blob_client(
@@ -167,7 +174,31 @@ def upload_invoices(request):
             responses.append({
                 'file_name': file.name,
                 'message': 'File uploaded and processed successfully',
-                'invoice_ids': [invoice_data['invoice_id'] for invoice in invoices.documents]
+                'invoices': [
+                    {
+                        "invoice_number": invoice.invoice_number,
+                        "invoice_date": invoice.invoice_date,
+                        "due_date": invoice.due_date,
+                        "total_amount": invoice.total_amount,
+                        "amount_due": invoice.amount_due,
+                        "vendor_name": invoice.vendor_name,
+                        "vendor_address": invoice.vendor_address,
+                        "vendor_tax_id": invoice.vendor_tax_id,
+                        "vendor_address_recipient": invoice.vendor_address_recipient,
+                        "customer_name": invoice.customer_name,
+                        "customer_id": invoice.customer_id,
+                        "customer_tax_id": invoice.customer_tax_id,
+                        "customer_address": invoice.customer_address,
+                        "billing_address": invoice.billing_address,
+                        "shipping_address": invoice.shipping_address,
+                        "payment_term": invoice.payment_term,
+                        "items": invoice.items,
+                        "created_by": invoice.created_by.username,
+                        "created_at": invoice.created_at,
+                        "file_id": invoice.file.id if invoice.file else None,
+                        "file_name": invoice.file.file.name if invoice.file else None,
+                    } for invoice in invoice_objects
+                ]
             })
         except Exception as e:
             print(traceback.format_exc())
@@ -183,6 +214,8 @@ def upload_invoices(request):
 @permission_classes([IsAuthenticated])
 def generate_excel_report(request):
     nip = request.GET.get('nip')
+    type = request.GET.get('type')
+
     if not nip:
         return JsonResponse({'error': 'NIP parameter is required'}, status=400)
 
@@ -192,37 +225,54 @@ def generate_excel_report(request):
 
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = f"Report for NIP {nip}"
 
-    headers = [
-        "Invoice Number", "Invoice Date", "Due Date", "Total Amount",
-        "Vendor Name", "Vendor Address", "Customer Name", "Customer Address"
-    ]
-    sheet.append(headers)
+    if type == "customer_total":
+        sheet.title = f"Report for NIP {nip}"
 
-    for invoice in invoices:
-        sheet.append([
-            invoice.invoice_number,
-            invoice.invoice_date,
-            invoice.due_date,
-            float(invoice.total_amount),
-            invoice.vendor_name,
-            invoice.vendor_address,
-            invoice.customer_name,
-            invoice.customer_address,
-        ])
+        headers = [
+            "Invoice Number", "Invoice Date", "Due Date", "Total Amount",
+            "Vendor Name", "Customer Name"
+        ]
+        sheet.append(headers)
 
-    sheet.append([])
-    sheet.append(["Total Invoices", invoices.count()])
-    sheet.append(["Total Amount", sum(invoice.total_amount for invoice in invoices)])
+        for invoice in invoices:
+            sheet.append([
+                invoice.invoice_number,
+                invoice.invoice_date,
+                invoice.due_date,
+                float(invoice.total_amount),
+                invoice.vendor_name,
+                invoice.customer_name,
+            ])
 
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = f'attachment; filename="report_{nip}.xlsx"'
-    workbook.save(response)
+        sheet.append([])
+        sheet.append(["Total Invoices", invoices.count()])
+        sheet.append(["Total Amount", sum(invoice.total_amount for invoice in invoices)])
 
-    return response
+        file_name = f"report_{nip}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+        file_path = f"temp/{file_name}"
+    else:
+        return JsonResponse({'error': 'Unknown customer type'}, status=400)
+
+    workbook.save(file_path)
+
+    with open(file_path, 'rb') as file_content:
+        report = Report.objects.create(
+            name=f"Report for NIP {nip}",
+            report_type="Excel",
+            generated_by=request.user,
+        )
+        report.file.save(file_name, ContentFile(file_content.read()))
+
+    os.remove(file_path)
+
+    return JsonResponse({
+        'message': 'Report generated successfully',
+        'report_id': report.id,
+        'report_name': report.name
+
+        # zwrócić invoices
+    })
 
 
 @api_view(['GET'])
@@ -232,14 +282,13 @@ def get_invoices(request):
     Endpoint zwracający dane faktur w formacie JSON.
     Obsługuje filtry GET: invoice_number, vendor_tax_id, customer_tax_id, invoice_date_from, invoice_date_to.
     """
-    # Pobieranie parametrów filtrów
+
     invoice_number = request.GET.get('invoice_number')
-    vendor_tax_id = request.GET.get('vendor_tax_id')
-    customer_tax_id = request.GET.get('customer_tax_id')
+    vendor_tax_id = request.GET.get('vendor_nip')
+    customer_tax_id = request.GET.get('customer_nip')
     invoice_date_from = request.GET.get('invoice_date_from')
     invoice_date_to = request.GET.get('invoice_date_to')
 
-    # Tworzenie zapytania do bazy z dynamicznymi filtrami
     filters = Q()
 
     if invoice_number:
@@ -261,10 +310,8 @@ def get_invoices(request):
         except ValueError:
             return JsonResponse({'error': 'Invalid date format for invoice_date_to. Use YYYY-MM-DD.'}, status=400)
 
-    # Pobieranie danych z bazy
     invoices = Invoice.objects.filter(filters)
 
-    # Przygotowanie danych do formatu JSON
     data = [
         {
             "invoice_number": invoice.invoice_number,
@@ -286,9 +333,53 @@ def get_invoices(request):
             "items": invoice.items,
             "created_by": invoice.created_by.username,
             "created_at": invoice.created_at,
-            "file": invoice.file.file.name if invoice.file else None,
+            "file_id": invoice.file.id if invoice.file else None,
+            "file_name": invoice.file.file.name if invoice.file else None,
         }
         for invoice in invoices
     ]
 
     return JsonResponse({"invoices": data}, status=200, safe=False)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_reports(request):
+    name_filter = request.GET.get('name', '')
+
+    reports = Report.objects.filter(
+        Q(name__icontains=name_filter)
+    ).order_by('-generated_at')
+
+    report_list = [
+        {
+            'id': report.id,
+            'name': report.name,
+            'type': report.report_type,
+            'generated_at': report.generated_at,
+            'generated_by': report.generated_by.username,
+        }
+        for report in reports
+    ]
+
+    return JsonResponse({'reports': report_list})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def download_report(request, report_id):
+    try:
+        report = Report.objects.get(id=report_id)
+        return FileResponse(report.file.open('rb'), as_attachment=True, filename=report.file.name)
+    except Report.DoesNotExist:
+        return JsonResponse({'error': 'Report not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def download_file(request, file_id):
+    try:
+        report = UploadedFile.objects.get(id=file_id)
+        return FileResponse(report.file.open('rb'), as_attachment=True, filename=report.file.name)
+    except Report.DoesNotExist:
+        return JsonResponse({'error': 'Report not found'}, status=404)
+
