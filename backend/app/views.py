@@ -258,7 +258,7 @@ def generate_excel_report(request):
 
     with open(file_path, 'rb') as file_content:
         report = Report.objects.create(
-            name=f"Report for NIP {nip}",
+            name=f"Raport dla NIP {nip}",
             report_type="Excel",
             generated_by=request.user,
         )
@@ -266,13 +266,12 @@ def generate_excel_report(request):
 
     os.remove(file_path)
 
-    return JsonResponse({
-        'message': 'Report generated successfully',
-        'report_id': report.id,
-        'report_name': report.name
-
-        # zwrócić invoices
-    })
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="report_{nip}.xlsx"'
+    workbook.save(response)
+    return response
 
 
 @api_view(['GET'])
