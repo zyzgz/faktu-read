@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user, user_login, user_logout, check_login, upload_invoices, generate_excel_report
+from .views import register_user, user_login, user_logout, check_login, upload_invoices, generate_excel_report, get_invoices
 
 urlpatterns = [
     path('register/', register_user, name='register'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('check_login/', check_login, name='check_login'),
     path('upload-invoices/', upload_invoices, name='upload_invoice'),
     path('generate-excel-report/', generate_excel_report, name='generate_excel_report'),
+    path('get-invoices/', get_invoices, name='get_invoices'),
 ]

@@ -11,10 +11,18 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('invoice_number', 'client_nip', 'issue_date', 'due_date', 'total_amount', 'created_by', 'created_at', 'file')
-    search_fields = ('invoice_number', 'client_nip')
-    list_filter = ('issue_date', 'due_date', 'created_at')
-    ordering = ('-issue_date',)
+    list_display = (
+        'invoice_number', 'invoice_date', 'due_date', 'total_amount',
+        'vendor_name', 'vendor_tax_id', 'customer_name', 'customer_tax_id',
+        'created_by', 'created_at', 'file'
+    )
+    search_fields = (
+        'invoice_number', 'vendor_name', 'vendor_tax_id', 'customer_name', 'customer_tax_id'
+    )
+    list_filter = (
+        'invoice_date', 'due_date', 'created_at'
+    )
+    ordering = ('-invoice_date',)
 
 
 @admin.register(UploadedFile)
