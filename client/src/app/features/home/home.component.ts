@@ -1,4 +1,4 @@
-import { AsyncPipe, CurrencyPipe } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -9,7 +9,7 @@ import { BehaviorSubject, catchError, of, switchMap, tap } from 'rxjs';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [ButtonModule, RouterLink, TableModule, CurrencyPipe, AsyncPipe],
+  imports: [ButtonModule, RouterLink, TableModule, CurrencyPipe, AsyncPipe, DatePipe],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
