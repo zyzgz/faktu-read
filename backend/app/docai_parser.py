@@ -11,6 +11,14 @@ def parse_invoice_content(invoice):
         """Bezpiecznie pobiera wartość pola, jeśli istnieje."""
         return field["content"] if field else None
 
+    def get_currency_field(field):
+        currency_field = field["valueCurrency"] if field else None
+        return currency_field["currencyCode"] if currency_field["currencyCode"] else None
+
+    def get_total_value(field):
+        currency_field = field["valueCurrency"] if field else None
+        return currency_field["amount"] if currency_field["amount"] else None
+
     def get_field_value_with_key(field, key):
         """Pobiera wartość konkretnego klucza z pola, jeśli istnieje."""
         return field.get(key) if field else None
@@ -28,8 +36,9 @@ def parse_invoice_content(invoice):
         "customer_address": get_field_value(invoice.fields.get("CustomerAddress")),
         "invoice_date": get_field_value(invoice.fields.get("InvoiceDate")),
         "due_date": get_field_value(invoice.fields.get("DueDate")),
-        "total_amount": get_field_value(invoice.fields.get("InvoiceTotal")),
-        "amount_due": get_field_value(invoice.fields.get("AmountDue")),
+        "total_amount": get_total_value(invoice.fields.get("InvoiceTotal")),
+        "currency": get_currency_field(invoice.fields.get("InvoiceTotal")),
+        "amount_due": get_total_value(invoice.fields.get("AmountDue")),
         "billing_address": get_field_value(invoice.fields.get("BillingAddress")),
         "shipping_address": get_field_value(invoice.fields.get("ShippingAddress")),
         "payment_term": get_field_value(invoice.fields.get("PaymentTerm")),

@@ -101,9 +101,9 @@ def convert_date(date_string):
         try:
             return datetime.strptime(date_string, fmt).date()
         except ValueError:
-            continue  # Próbuj następny format, jeśli ten nie działa
+            continue
 
-    raise ValueError(f"Date '{date_string}' is in an invalid format.")
+    return None
 
 
 def extract_amount(amount_string):
@@ -136,13 +136,14 @@ def upload_invoices(request):
 
                 invoice_date = convert_date(invoice_data['invoice_date'])
                 due_date = convert_date(invoice_data['due_date'])
-                total_amount = extract_amount(invoice_data['total_amount'])
 
                 invoice_obj = Invoice.objects.create(
                     invoice_number=invoice_data['invoice_id'],
                     invoice_date=invoice_date,
                     due_date=due_date,
-                    total_amount=total_amount,
+                    total_amount=invoice_data['total_amount'],
+                    amount_due=invoice_data['amount_due'],
+                    currency=invoice_data['currency'],
                     vendor_name=invoice_data['vendor_name'],
                     vendor_address=invoice_data['vendor_address'],
                     vendor_tax_id=invoice_data['vendor_tax_id'],
@@ -181,6 +182,7 @@ def upload_invoices(request):
                         "due_date": invoice.due_date,
                         "total_amount": invoice.total_amount,
                         "amount_due": invoice.amount_due,
+                        "currency": invoice.currency,
                         "vendor_name": invoice.vendor_name,
                         "vendor_address": invoice.vendor_address,
                         "vendor_tax_id": invoice.vendor_tax_id,
@@ -258,7 +260,7 @@ def generate_excel_report(request):
 
     with open(file_path, 'rb') as file_content:
         report = Report.objects.create(
-            name=f"Report for NIP {nip}",
+            name=f"Raport dla NIP {nip}",
             report_type="Excel",
             generated_by=request.user,
         )
@@ -266,13 +268,12 @@ def generate_excel_report(request):
 
     os.remove(file_path)
 
-    return JsonResponse({
-        'message': 'Report generated successfully',
-        'report_id': report.id,
-        'report_name': report.name
-
-        # zwrócić invoices
-    })
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="report_{nip}.xlsx"'
+    workbook.save(response)
+    return response
 
 
 @api_view(['GET'])
@@ -319,6 +320,7 @@ def get_invoices(request):
             "due_date": invoice.due_date,
             "total_amount": invoice.total_amount,
             "amount_due": invoice.amount_due,
+            "currency": invoice.currency,
             "vendor_name": invoice.vendor_name,
             "vendor_address": invoice.vendor_address,
             "vendor_tax_id": invoice.vendor_tax_id,

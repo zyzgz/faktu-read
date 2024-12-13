@@ -14,6 +14,7 @@ class Invoice(models.Model):
     due_date = models.DateField(null=True, blank=True)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)  # Zwiększono max_digits dla wyższych kwot
     amount_due = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)  # Opcjonalne pole na kwotę do zapłaty
+    currency = models.CharField(max_length=256, null=True, blank=True)
 
     vendor_name = models.CharField(max_length=256, null=True, blank=True)
     vendor_address = models.CharField(max_length=512, null=True, blank=True)  # Zwiększono max_length dla dłuższych adresów
