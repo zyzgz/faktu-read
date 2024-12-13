@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiService } from '../../core/services/api.service';
 import { HttpParams } from '@angular/common/http';
-import { catchError, Observable } from 'rxjs';
+import { catchError, map, Observable } from 'rxjs';
 import { Invoice } from './interfaces/invoice.interface';
 import { InvoiceFilters } from './interfaces/invoice-filters.interface';
 import { UploadResponse } from './interfaces/upload-response.interface';
@@ -20,7 +20,8 @@ export class DocumentsService {
       }
     }
 
-    return this.api.get<Invoice[]>('invoices', { params }).pipe(
+    return this.api.get<{ invoices: Invoice[] }>('get-invoices/').pipe(
+      map((response) => response.invoices),
       catchError((error) => {
         console.error('Get invoices error:', error);
         throw error;
@@ -28,11 +29,11 @@ export class DocumentsService {
     );
   }
 
-  uploadInvoices(files: File[]): Observable<UploadResponse[]> {
+  uploadInvoices(files: File[]): Observable<{ results: UploadResponse[] }> {
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file, file.name));
 
-    return this.api.post<UploadResponse[]>('upload-invoices', formData).pipe(
+    return this.api.post<{ results: UploadResponse[] }>('upload-invoices/', formData).pipe(
       catchError((error) => {
         console.error('Upload invoices error:', error);
         throw error;

@@ -31,16 +31,20 @@
       <p-table [value]="uploadedInvoices">
         <ng-template pTemplate="header">
           <tr>
-            <th>Nazwa pliku</th>
-            <th>Wiadomość</th>
-            <th>Błąd</th>
+            <th>Numer faktury</th>
+            <th>NIP klienta</th>
+            <th>Data wystawienia</th>
+            <th>Data płatności</th>
+            <th>Kwota</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-invoice>
           <tr>
-            <td>{{ invoice.file_name }}</td>
-            <td>{{ invoice.message }}</td>
-            <td>{{ invoice.error }}</td>
+            <td>{{ invoice.invoice_number }}</td>
+            <td>{{ invoice.customer_tax_id }}</td>
+            <td>{{ invoice.invoice_date }}</td>
+            <td>{{ invoice.due_date }}</td>
+            <td>{{ invoice.total_amount | currency : 'PLN' : 'symbol-narrow' : '1.2-2' }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">

@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -10,24 +10,23 @@ export class ApiService {
 
   private readonly baseUrl = 'http://127.0.0.1:8000/api';
 
-  private getHttpOptions() {
-    return {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-      }),
-    };
+  private getHttpOptions(body?: any) {
+    const headers = new HttpHeaders();
+    if (!(body instanceof FormData)) headers.set('Content-Type', 'application/json');
+
+    return { headers };
   }
 
-  get<T>(endpoint: string, params: any = {}): Observable<T> {
+  get<T>(endpoint: string, params?: HttpParams): Observable<T> {
     return this.http.get<T>(`${this.baseUrl}/${endpoint}`, { params, ...this.getHttpOptions() });
   }
 
   post<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.post<T>(`${this.baseUrl}/${endpoint}`, body, this.getHttpOptions());
+    return this.http.post<T>(`${this.baseUrl}/${endpoint}`, body, this.getHttpOptions(body));
   }
 
   put<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.put<T>(`${this.baseUrl}/${endpoint}`, body, this.getHttpOptions());
+    return this.http.put<T>(`${this.baseUrl}/${endpoint}`, body, this.getHttpOptions(body));
   }
 
   delete<T>(endpoint: string): Observable<T> {
