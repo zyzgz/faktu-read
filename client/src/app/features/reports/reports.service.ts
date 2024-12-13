@@ -10,9 +10,9 @@ export class ReportsService {
   private readonly api = inject(ApiService);
 
   generateExcelReport(nip: string): Observable<Blob> {
-    const params = new HttpParams().set('nip', nip);
+    const params = new HttpParams().set('nip', nip).set('type', 'customer_total');
 
-    return this.api.get<Blob>('/generate-excel-report', { params, responseType: 'blob' }).pipe(
+    return this.api.get<Blob>('generate-excel-report', params).pipe(
       catchError((error) => {
         console.error('Generate Excel report error:', error);
         throw error;
