@@ -47,16 +47,44 @@
       <h3 class="text-2xl font-semibold leading-none tracking-tight">Ostatnie raporty</h3>
     </div>
     <div class="p-6 pt-0">
-      <ul class="space-y-2">
-        @for (report of reportHistory; track $index) {
-        <li class="flex items-center justify-between py-2 border-b last:border-b-0">
-          <span class="text-sm text-gray-600">{{ report }}</span>
-          <p-button type="button" label="Zobacz"></p-button>
-        </li>
-        } @empty {
-        <li class="text-gray-500">Nie znaleziono raportów.</li>
-        }
-      </ul>
+      <p-table
+        [value]="(reportHistory$ | async)!"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Nazwa</th>
+            <th>Data wygenerowania</th>
+            <th>Wygenerowane przez</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-report>
+          <tr>
+            <td>{{ report.name }}</td>
+            <td>{{ report.generated_at | date : 'medium' }}</td>
+            <td>{{ report.generated_by }}</td>
+            <td class="flex justify-end">
+              <p-button
+                type="button"
+                label="Pobierz"
+                severity="secondary"
+                size="small"
+                (onClick)="getReportById(report.id)"
+              ></p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center p-4">Nie znaleziono raportów.</td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   </div>
 </div>

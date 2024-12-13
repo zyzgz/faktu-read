@@ -4,15 +4,16 @@ import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DocumentsService } from '../documents/documents.service';
-import { BehaviorSubject, catchError, map, of, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, map, of, switchMap, tap } from 'rxjs';
 import { MessageService } from 'primeng/api';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Toast } from 'primeng/toast';
+import { TableModule } from 'primeng/table';
 
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [Select, FormsModule, ButtonModule, AsyncPipe, Toast],
+  imports: [Select, FormsModule, ButtonModule, AsyncPipe, Toast, TableModule, DatePipe],
   providers: [MessageService],
   templateUrl: './reports.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,7 +44,14 @@ export class ReportsComponent {
   );
   selectedNip: string | null = null;
   nipError$ = new BehaviorSubject<string | null>(null);
-  reportHistory = [];
+  reportHistoryError$ = new BehaviorSubject<string | null>(null);
+  reportHistory$ = this.reports.getExcelReports().pipe(
+    tap(() => this.reportHistoryError$.next(null)),
+    catchError(() => {
+      this.reportHistoryError$.next('Nie udało się pobrać historii raportów.');
+      return of([]);
+    }),
+  );
 
   refreshNips(): void {
     this.refreshNips$.next();
@@ -59,23 +67,34 @@ export class ReportsComponent {
     }
 
     this.reports.generateExcelReport(this.selectedNip).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `report_${this.selectedNip}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      },
-      error: () => {
+      next: (blob) => this.downloadExcelFile(blob, `report_${this.selectedNip}.xlsx`),
+      error: () =>
         this.message.add({
           severity: 'error',
           summary: 'Wystąpił błąd',
           detail: 'Nie udało się wygenerować raportu, spróbuj ponownie.',
-        });
-      },
+        }),
     });
+  }
+
+  getReportById(id: string): void {
+    this.reports.getReportById(id).subscribe({
+      next: (blob) => this.downloadExcelFile(blob, `report_${id}.xlsx`),
+      error: () =>
+        this.message.add({
+          severity: 'error',
+          summary: 'Wystąpił błąd',
+          detail: 'Nie udało się pobrać raportu, spróbuj ponownie.',
+        }),
+    });
+  }
+
+  private downloadExcelFile(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 }

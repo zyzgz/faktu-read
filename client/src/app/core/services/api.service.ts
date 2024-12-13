@@ -17,8 +17,10 @@ export class ApiService {
     return { headers };
   }
 
-  get<T>(endpoint: string, params?: HttpParams): Observable<T> {
-    return this.http.get<T>(`${this.baseUrl}/${endpoint}`, { params, ...this.getHttpOptions() });
+  get<T>(endpoint: string, params?: HttpParams, options?: any): Observable<any> {
+    const defaultOptions = this.getHttpOptions();
+    const mergedOptions = { ...defaultOptions, ...options, params };
+    return this.http.get<T>(`${this.baseUrl}/${endpoint}`, mergedOptions);
   }
 
   post<T>(endpoint: string, body: any): Observable<T> {

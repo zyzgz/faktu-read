@@ -45,7 +45,13 @@
         ></p-button>
       </div>
       } @if (invoices$ | async; as invoices) {
-      <p-table [value]="invoices">
+      <p-table
+        [value]="invoices"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+      >
         <ng-template pTemplate="header">
           <tr>
             <th>Numer faktury</th>
@@ -55,6 +61,7 @@
             <th>Kwota</th>
             <th>Data utworzenia</th>
             <th>Utworzone przez</th>
+            <th></th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-invoice>

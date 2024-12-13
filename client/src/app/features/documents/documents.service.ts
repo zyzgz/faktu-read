@@ -29,6 +29,18 @@ export class DocumentsService {
     );
   }
 
+  getInvoiceById(id: string): Observable<Blob> {
+    return this.api
+      .get<Blob>(`download-file/${id}`, new HttpParams(), { responseType: 'blob' as 'json' })
+      .pipe(
+        map((response) => response.invoice),
+        catchError((error) => {
+          console.error('Get invoice by id error:', error);
+          throw error;
+        }),
+      );
+  }
+
   uploadInvoices(files: File[]): Observable<{ results: UploadResponse[] }> {
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file, file.name));
